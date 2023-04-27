@@ -5,11 +5,16 @@ s3 = boto3.client("s3") #definimos un cliente para trabajar con S3 usando boto3
 bucket_name = "data-raw-udesa-prueba" #el nombre de nuestro bucket creado
 s3_object = "advertiser_ids.csv" #el archivo que vamos a traernos
 
-obj = s3.get_object(Bucket = bucket_name, Key=s3_object) #definimos el archivo a levantar
 
+
+#Traemos de S3
+obj = s3.get_object(Bucket = bucket_name, Key=s3_object) #definimos el archivo a levantar
 df_advertiser_ids = pd.read_csv(obj['Body']) #levantamos el DF
 
 print(df_advertiser_ids.head())
+
+
+
 
 
 #Enviando a S3
@@ -18,10 +23,36 @@ s3.put_object(Bucket=bucket_name, Key='desde_EC2.csv', Body=desde_EC2.encode('ut
 
 
 
+
+
+
+
+
 #Enviando a RDS
+import psycopg2
+dbname = "database-1"
+user = "postgres" #Configuracion / Disponibilidad / nombre de usuario maestro
+password = "chavoLOCO23"
+host = "database-1.c7mkdwca7kj0.us-east-1.rds.amazonaws.com" #Econectividad y seguridad
+port = "5432"
+
+#Creamos la conexión a RDS
+conn = psycopg2.connect(
+    dbname=dbname,
+    user=user,
+    password=password,
+    host=host,
+    port=port
+)
 
 
 
+# Insertar los registros en la tabla 'table_name'
+table_name = 'table_name'
+desde_EC2.to_sql(table_name, conn, if_exists='append', index=False)
 
-# df_product_views = pd.read_csv(df_product_views)
-# df_ads_views = pd.read_csv(df_ads_views)
+# Cerrar la conexión
+conn.close()
+
+
+
