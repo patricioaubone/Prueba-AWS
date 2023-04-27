@@ -1,5 +1,5 @@
 import psycopg2
-dbname = "database-1"
+dbname = "-"
 user = "postgres" #Configuracion / Disponibilidad / nombre de usuario maestro
 password = "chavoLOCO23"
 host = "database-1.c7mkdwca7kj0.us-east-1.rds.amazonaws.com" #Econectividad y seguridad
