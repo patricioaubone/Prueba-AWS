@@ -9,6 +9,7 @@ obj = s3.get_object(Bucket = bucket_name, Key=s3_object) #definimos el archivo a
 
 df_advertiser_ids = pd.read_csv(obj['Body']) #levantamos el DF
 df_advertiser_ids.head()
+print("exit")
 
 # df_product_views = pd.read_csv(df_product_views)
 # df_ads_views = pd.read_csv(df_ads_views)
