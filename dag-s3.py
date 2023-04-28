@@ -46,10 +46,11 @@ conn = psycopg2.connect(
 )
 
 
+hacia_RDS = pd.DataFrame(df_advertiser_ids)
 
 # Insertar los registros en la tabla 'table_name'
 table_name = 'tabla_RDS'
-desde_EC2.to_sql(table_name, conn, if_exists='append', index=False)
+hacia_RDS.to_sql(table_name, conn, if_exists='append', index=False)
 
 # Cerrar la conexión
 conn.close()
