@@ -15,19 +15,9 @@ conn = psycopg2.connect(
 )
 
 cur = conn.cursor()
-cur.execute("""CREATE TABLE IF NOT EXISTS tabla_RDS (adv_id VARCHAR(50));""")
+cur.execute("""CREATE TABLE IF NOT EXISTS tabla_rds (adv_id VARCHAR(50));""")
 
 conn.commit()
-
-table_name = "tabla_RDS"
-cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}');")
-exists = cur.fetchone()[0]
-
-if exists:
-    print(f"La tabla {table_name} existe en la base de datos {dbname}.")
-else:
-    print(f"La tabla {table_name} no existe en la base de datos {dbname}.")
-    
 
 
 # Cerrar la conexión
