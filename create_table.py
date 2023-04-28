@@ -19,6 +19,7 @@ cur.execute("""CREATE TABLE IF NOT EXISTS tabla_RDS (adv_id VARCHAR(50));""")
 
 conn.commit()
 
+table_name = "tabla_RDS"
 cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = '{table_name}');")
 exists = cur.fetchone()[0]
 
