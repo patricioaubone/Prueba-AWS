@@ -15,7 +15,7 @@ conn = psycopg2.connect(
 )
 
 cur = conn.cursor()
-cur.execute("""CREATE TABLE IF NOT EXISTS tabla_rds (adv_id VARCHAR(50));""")
+cur.execute("""CREATE TABLE IF NOT EXISTS tabla_2 (adv_id VARCHAR(50));""")
 
 conn.commit()
 
