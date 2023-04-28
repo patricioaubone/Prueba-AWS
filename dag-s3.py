@@ -51,7 +51,7 @@ hacia_RDS = pd.DataFrame(df_advertiser_ids)
 
 # Poblar la tabla con los datos del dataframe
 for index, row in hacia_RDS.iterrows():
-    cur.execute(f"INSERT INTO {tabla_RDS} (adv_id) VALUES (%s);", tuple(row))
+    cur.execute(f"INSERT INTO tabla_RDS (adv_id) VALUES (%s);", tuple(row))
 
 # Confirmar los cambios
 conn.commit()
