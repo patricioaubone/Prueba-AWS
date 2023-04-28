@@ -2,7 +2,7 @@ import boto3
 import pandas as pd
 
 s3 = boto3.client("s3") #definimos un cliente para trabajar con S3 usando boto3
-bucket_name = "data-raw-udesa-prueba1" #el nombre de nuestro bucket creado
+bucket_name = "bucket-udesa-prueba" #el nombre de nuestro bucket creado
 s3_object = "advertiser_ids.csv" #el archivo que vamos a traernos
 
 
