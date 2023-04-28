@@ -45,15 +45,29 @@ conn = psycopg2.connect(
     port=port
 )
 
+cur = conn.cursor()
 
 hacia_RDS = pd.DataFrame(df_advertiser_ids)
 
-# Insertar los registros en la tabla 'table_name'
-table_name = 'tabla_RDS'
-hacia_RDS.to_sql(table_name, conn, if_exists='append', index=False)
+# Poblar la tabla con los datos del dataframe
+for index, row in hacia_RDS.iterrows():
+    cur.execute(f"INSERT INTO {tabla_RDS} (adv_id) VALUES (%s);", tuple(row))
+
+# Confirmar los cambios
+conn.commit()
 
 # Cerrar la conexión
+cur.close()
 conn.close()
+
+
+
+# Insertar los registros en la tabla 'table_name'
+# table_name = 'tabla_RDS'
+# hacia_RDS.to_sql(table_name, conn, if_exists='append', index=False)
+
+# # Cerrar la conexión
+# conn.close()
 
 
 
