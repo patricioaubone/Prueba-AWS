@@ -24,9 +24,9 @@ cur.execute(f"SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table
 exists = cur.fetchone()[0]
 
 if exists:
-    print(f"La tabla {table_name} existe en la base de datos {database}.")
+    print(f"La tabla {table_name} existe en la base de datos {dbname}.")
 else:
-    print(f"La tabla {table_name} no existe en la base de datos {database}.")
+    print(f"La tabla {table_name} no existe en la base de datos {dbname}.")
     
 
 
