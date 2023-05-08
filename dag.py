@@ -1,6 +1,6 @@
-import datetime
+from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.operators.bash import BashOperator
+# from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import pandas as pd
 import boto3
@@ -41,7 +41,7 @@ def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_produc
   
   
 
-  fecha_ayer =  datetime.datetime.strptime(ds, '%Y-%m-%d') - datetime.timedelta(days=1)
+  fecha_ayer =  datetime.strptime(ds, '%Y-%m-%d') - timedelta(days=1)
   
   #convertimos los campos date en datetime
   df_product_views['date'] = pd.to_datetime(df_product_views['date'])
@@ -88,7 +88,7 @@ def TopProduct(s3_object_product_views_filt, ds, **kwargs):
     df_top20 = df_count_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   datetime.datetime.strptime(ds, '%Y-%m-%d')
+    fecha_hoy =   datetime.strptime(ds, '%Y-%m-%d')
 
     df_top20['fecha_recom'] = fecha_hoy 
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20.csv', Body=df_top20.to_csv(index=False))#.encode('utf-8'))
@@ -121,7 +121,7 @@ def TopCTR (s3_object_ads_views_filt, ds, **kwargs):
     df_top20_CTR = df_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   datetime.datetime.strptime(ds, '%Y-%m-%d')
+    fecha_hoy =   datetime.strptime(ds, '%Y-%m-%d')
     df_top20_CTR['fecha_recom'] = fecha_hoy #pd.to_datetime(pd.Timestamp.today().date()).strftime('%Y-%m-%d')
     
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20_CTR.csv', Body=df_top20_CTR.to_csv(index=False))#.encode('utf-8'))
@@ -142,7 +142,7 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     #Enviando a RDS
     import psycopg2
     dbname = "recomendaciones"
-    user = "postgres" #Configuracion / Disponibilidad / nombre de usuario maestro
+    user = "modelos" #Configuracion / Disponibilidad / nombre de usuario maestro
     password = "Chavoloco23"
     host = "database.cjblhvnzxmgc.us-west-1.rds.amazonaws.com" #Econectividad y seguridad
     port = "5432"
@@ -159,17 +159,17 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     cur = conn.cursor()
 
     # Poblar la tabla con los datos del dataframe
-    for index, row in df_topProduct.iterrows():
-        #cur.execute(f"INSERT INTO top_20 (adv_id, product_id, click int, impression int, clickthroughrate, fecha_recom) VALUES (%s);", tuple(row))
-        cur.execute("INSERT INTO top_20 (adv_id, product_id, click, impression, clickthroughrate, fecha_recom) VALUES (%(adv_id)s, %(product_id)s, %(click)s, %(impression)s, %(clickthroughrate)s, %(fecha_recom)s);", row.to_dict())
+    for index, row in df_topCTR.iterrows():
+        #cur.execute(f"INSERT INTO top_20_ctr (adv_id, product_id, click, impression, clickthroughrate, fecha_recom) VALUES (%s);", tuple(row))
+        cur.execute("INSERT INTO top_20_ctr (adv_id, product_id, click, impression, clickthroughrate, fecha_recom) VALUES (%(advertiser_id)s, %(product_id)s, %(click)s, %(impression)s, %(click-through-rate)s, %(fecha_recom)s);", row.to_dict())
 
     # Confirmar los cambios
     conn.commit()
 
     # Poblar la tabla con los datos del dataframe
-    for index, row in df_topCTR.iterrows():
-        #cur.execute(f"INSERT INTO top_20_ctr (adv_id, product_id, cantidad, fecha_recom) VALUES (%s);", tuple(row))
-        cur.execute("INSERT INTO top_20_ctr (adv_id, product_id, cantidad, fecha_recom) VALUES (%s, %s, %s, %s);", (row['adv_id'], row['product_id'], row['cantidad'], row['fecha_recom']))
+    for index, row in df_topProduct.iterrows():
+        #cur.execute(f"INSERT INTO top_20 (adv_id, product_id, cantidad, fecha_recom) VALUES (%s);", tuple(row))
+        cur.execute("INSERT INTO top_20 (adv_id, product_id, cantidad, fecha_recom) VALUES (%(advertiser_id)s, %(product_id)s, %(cantidad)s, %(fecha_recom)s);", row.to_dict())
 
     # Confirmar los cambios
     conn.commit()
@@ -185,8 +185,9 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
 with DAG(
     dag_id = 'Recomendar',
     schedule_interval= '0 0 * * *', #se ejecuta a las 00:00 todos los días, todas las semanas, todos los meses
-    start_date=datetime.datetime(2022,4,1),
-    catchup=False
+    start_date=datetime(2022,4,1),
+    catchup=False,
+    dagrun_timeout=timedelta(minutes=60)
 ) as dag:
     FiltrarDatos = PythonOperator(
         task_id='Filtro',
@@ -216,7 +217,7 @@ with DAG(
     )
 
 
-#Dependencias
+# #Dependencias
 FiltrarDatos >> TopCTR
 FiltrarDatos >> TopProduct
 [TopCTR, TopProduct] >> DBWriting
