@@ -7,7 +7,7 @@ import boto3
 
 # instanciamos los objetos de s3
 s3 = boto3.client("s3") #definimos un cliente para trabajar con S3 usando boto3
-bucket_name = "udesa-tp2" #el nombre de nuestro bucket creado
+bucket_name = "udesa-tp1" #el nombre de nuestro bucket creado
 
 
 s3_object_advertiser_ids = "Data/Raw/advertiser_ids.csv" #el archivo que vamos a traernos
