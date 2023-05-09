@@ -17,8 +17,8 @@ conn = psycopg2.connect(
 
 cur = conn.cursor()
 #CREACION
-cur.execute('create table top_20 (adv_id varchar(50), product_id varchar(50), cantidad int, fecha_recom varchar(50))')
-cur.execute('create table top_20_ctr (adv_id varchar(50), product_id varchar(50), click int, impression int, clickthroughrate float(3), fecha_recom varchar(50))')
+#cur.execute('create table top_20 (adv_id varchar(50), product_id varchar(50), cantidad int, fecha_recom varchar(50))')
+#cur.execute('create table top_20_ctr (adv_id varchar(50), product_id varchar(50), click int, impression int, clickthroughrate float(3), fecha_recom varchar(50))')
 
 #MODIFICAR TIPO DE DATO
 # cur.execute('alter table top_20 alter column fecha_recom type varchar(50)')
@@ -44,10 +44,10 @@ cur.execute('create table top_20_ctr (adv_id varchar(50), product_id varchar(50)
 
 # conn.commit()
 
-# cur.execute('select * from top_20_ctr') 
-# rows = cur.fetchall()
-# for row in rows:
-#     print(row)
+cur.execute('select * from top_20_ctr') 
+rows = cur.fetchall()
+for row in rows:
+    print(row)
     
 conn.commit()
 # Cerrar la conexión
