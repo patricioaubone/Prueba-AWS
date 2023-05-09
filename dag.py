@@ -142,7 +142,7 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     #Enviando a RDS
     import psycopg2
     dbname = "recomendaciones"
-    user = "modelos" #Configuracion / Disponibilidad / nombre de usuario maestro
+    user = "postgres" #Configuracion / Disponibilidad / nombre de usuario maestro
     password = "Chavoloco23"
     host = "database.cjblhvnzxmgc.us-west-1.rds.amazonaws.com" #Econectividad y seguridad
     port = "5432"
