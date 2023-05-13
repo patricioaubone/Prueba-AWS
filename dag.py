@@ -195,18 +195,21 @@ with DAG(
         op_kwargs = {"s3_object_advertiser_ids" : s3_object_advertiser_ids,
                     "s3_object_ads_views": s3_object_ads_views,
                     "s3_object_product_views":s3_object_product_views}
+        provide_context=True
     )
 
     TopCTR = PythonOperator(
         task_id='TopCTR',
         python_callable=TopCTR, #función definida arriba
         op_kwargs = {"s3_object_ads_views_filt" : s3_object_ads_views_filt}
+        provide_context=True
     )
 
     TopProduct = PythonOperator(
         task_id='TopProduct',
         python_callable=TopProduct, #función definida arriba
         op_kwargs = {"s3_object_product_views_filt" : s3_object_product_views_filt}
+        provide_context=True
     )
 
     DBWriting = PythonOperator(
