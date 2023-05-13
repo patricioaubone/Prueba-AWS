@@ -22,7 +22,7 @@ s3_object_df_top20_CTR = "Data/Processed/df_top20_CTR.csv"
 
 
 
-def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_product_views, ds, **kwargs):
+def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_product_views, **context, **kwargs):
   
   
   '''
@@ -41,7 +41,7 @@ def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_produc
   
   
 
-  fecha_ayer =  datetime.strptime(ds, '%Y-%m-%d') - timedelta(days=1)
+  fecha_ayer =  context['logical_date'] - timedelta(days=1)
   
   #convertimos los campos date en datetime
   df_product_views['date'] = pd.to_datetime(df_product_views['date'])
@@ -64,7 +64,7 @@ def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_produc
   return
 
 
-def TopProduct(s3_object_product_views_filt, ds, **kwargs):
+def TopProduct(s3_object_product_views_filt, **context, **kwargs):
     '''
     Esta función toma las vistas de productos ya filtradas y por cada advertiser
     se queda con el top 20 de productos vistos
@@ -88,7 +88,7 @@ def TopProduct(s3_object_product_views_filt, ds, **kwargs):
     df_top20 = df_count_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   datetime.strptime(ds, '%Y-%m-%d')
+    fecha_hoy =   context['logical_date']
 
     df_top20['fecha_recom'] = fecha_hoy 
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20.csv', Body=df_top20.to_csv(index=False))#.encode('utf-8'))
@@ -96,7 +96,7 @@ def TopProduct(s3_object_product_views_filt, ds, **kwargs):
     return 
 
 
-def TopCTR (s3_object_ads_views_filt, ds, **kwargs):
+def TopCTR (s3_object_ads_views_filt, **context, **kwargs):
     
     obj = s3.get_object(Bucket = bucket_name, Key=s3_object_ads_views_filt) #definimos el archivo a levantar
     df_ads_views_filt = pd.read_csv(obj['Body']) #levantamos el DF
@@ -121,7 +121,7 @@ def TopCTR (s3_object_ads_views_filt, ds, **kwargs):
     df_top20_CTR = df_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   datetime.strptime(ds, '%Y-%m-%d')
+    fecha_hoy =  context['logical_date']
     df_top20_CTR['fecha_recom'] = fecha_hoy #pd.to_datetime(pd.Timestamp.today().date()).strftime('%Y-%m-%d')
     
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20_CTR.csv', Body=df_top20_CTR.to_csv(index=False))#.encode('utf-8'))
