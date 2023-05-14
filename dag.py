@@ -183,40 +183,41 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
 
 #Definimos nuestro DAG y sus tareas.
 with DAG(
-    dag_id = 'Recomendar',
+    dag_id = 'Recomendar2',
     schedule_interval= '0 0 * * *', #se ejecuta a las 00:00 todos los días, todas las semanas, todos los meses
     start_date=datetime(2022,4,1),
     catchup=False,
     dagrun_timeout=timedelta(minutes=60)
 ) as dag:
-    FiltrarDatos = PythonOperator(
-        task_id='Filtro',
-        python_callable=FiltrarDatos, #función definida arriba
-        op_kwargs = {"s3_object_advertiser_ids" : s3_object_advertiser_ids,
-                    "s3_object_ads_views": s3_object_ads_views,
-                    "s3_object_product_views":s3_object_product_views},
-        provide_context=True
+  
+  FiltrarDatos = PythonOperator(
+    task_id='Filtro',
+    python_callable=FiltrarDatos, #función definida arriba
+    op_kwargs = {"s3_object_advertiser_ids" : s3_object_advertiser_ids,
+                 "s3_object_ads_views": s3_object_ads_views,
+                 "s3_object_product_views":s3_object_product_views},
+    provide_context=True
     )
 
-    TopCTR = PythonOperator(
-        task_id='TopCTR',
-        python_callable=TopCTR, #función definida arriba
-        op_kwargs = {"s3_object_ads_views_filt" : s3_object_ads_views_filt},
-        provide_context=True
+  TopCTR = PythonOperator(
+     task_id='TopCTR',
+    python_callable=TopCTR, #función definida arriba
+    op_kwargs = {"s3_object_ads_views_filt" : s3_object_ads_views_filt},
+    provide_context=True
     )
 
-    TopProduct = PythonOperator(
-        task_id='TopProduct',
-        python_callable=TopProduct, #función definida arriba
-        op_kwargs = {"s3_object_product_views_filt" : s3_object_product_views_filt},
-        provide_context=True
+  TopProduct = PythonOperator(
+    task_id='TopProduct',
+    python_callable=TopProduct, #función definida arriba
+    op_kwargs = {"s3_object_product_views_filt" : s3_object_product_views_filt},
+    provide_context=True
     )
 
-    DBWriting = PythonOperator(
-       task_id='DBWriting',
-       python_callable=DBWriting, #función definida arriba
-       op_kwargs = {"s3_object_df_top20" : s3_object_df_top20,
-                    "s3_object_df_top20_CTR" : s3_object_df_top20_CTR}
+  DBWriting = PythonOperator(
+    task_id='DBWriting',
+    python_callable=DBWriting, #función definida arriba
+    op_kwargs = {"s3_object_df_top20" : s3_object_df_top20,
+                 "s3_object_df_top20_CTR" : s3_object_df_top20_CTR}
     )
 
 
