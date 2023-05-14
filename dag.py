@@ -7,7 +7,7 @@ import boto3
 
 # instanciamos los objetos de s3
 s3 = boto3.client("s3") #definimos un cliente para trabajar con S3 usando boto3
-bucket_name = "udesa-tp1" #el nombre de nuestro bucket creado
+bucket_name = "udesa-tp" #el nombre de nuestro bucket creado
 
 
 s3_object_advertiser_ids = "Data/Raw/advertiser_ids.csv" #el archivo que vamos a traernos
@@ -22,49 +22,40 @@ s3_object_df_top20_CTR = "Data/Processed/df_top20_CTR.csv"
 
 
 
-def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_product_views, **context):
+def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_product_views, **kwargs):
+    obj = s3.get_object(Bucket = bucket_name, Key=s3_object_advertiser_ids) #definimos el archivo a levantar
+    df_advertiser_ids = pd.read_csv(obj['Body']) #levantamos el DF
   
-  
-  '''
-  funcion que agarra los logs de vistas de cada advertiser, de cada producto,
-   y los filtra según la fecha de corrida del script y los advertisers activos
-  '''
-  
-  obj = s3.get_object(Bucket = bucket_name, Key=s3_object_advertiser_ids) #definimos el archivo a levantar
-  df_advertiser_ids = pd.read_csv(obj['Body']) #levantamos el DF
-  
-  obj = s3.get_object(Bucket = bucket_name, Key=s3_object_ads_views) #definimos el archivo a levantar
-  df_ads_views = pd.read_csv(obj['Body']) #levantamos el DF
+    obj = s3.get_object(Bucket = bucket_name, Key=s3_object_ads_views) #definimos el archivo a levantar
+    df_ads_views = pd.read_csv(obj['Body']) #levantamos el DF
 
-  obj = s3.get_object(Bucket = bucket_name, Key=s3_object_product_views) #definimos el archivo a levantar
-  df_product_views = pd.read_csv(obj['Body']) #levantamos el DF
-  
-  
+    obj = s3.get_object(Bucket = bucket_name, Key=s3_object_product_views) #definimos el archivo a levantar
+    df_product_views = pd.read_csv(obj['Body']) #levantamos el DF
 
-  fecha_ayer =  context['logical_date'].date() - timedelta(days=1)
+    fecha_ayer =  kwargs['execution_date'].date() - timedelta(days=1)
   
   #convertimos los campos date en datetime
-  df_product_views['date'] = pd.to_datetime(df_product_views['date']).dt.date
-  df_ads_views['date'] = pd.to_datetime(df_ads_views['date']).dt.date
+    df_product_views['date'] = pd.to_datetime(df_product_views['date']).dt.date
+    df_ads_views['date'] = pd.to_datetime(df_ads_views['date']).dt.date
   
   #filtramos los dataframes para quedarnos con los datos antiguos a la fecha de hoy
-  df_product_views = df_product_views[df_product_views['date']==fecha_ayer]
-  df_ads_views = df_ads_views[df_ads_views['date']==fecha_ayer]
+    df_product_views = df_product_views[df_product_views['date']==fecha_ayer]
+    df_ads_views = df_ads_views[df_ads_views['date']==fecha_ayer]
   
   #filtramos los datasets para quedarnos con los advertisers activos
-  df_product_views = df_product_views[df_product_views['advertiser_id'].isin(df_advertiser_ids['advertiser_id'])]
-  df_ads_views = df_ads_views[df_ads_views['advertiser_id'].isin(df_advertiser_ids['advertiser_id'])] 
+    df_product_views = df_product_views[df_product_views['advertiser_id'].isin(df_advertiser_ids['advertiser_id'])]
+    df_ads_views = df_ads_views[df_ads_views['advertiser_id'].isin(df_advertiser_ids['advertiser_id'])] 
 
   #Guardamos los DF filtrados
 
-  s3.put_object(Bucket=bucket_name, Key='Data/Processed/product_views_filt.csv', Body=df_product_views.to_csv(index=False))#.encode('utf-8'))
-  s3.put_object(Bucket=bucket_name, Key='Data/Processed/ads_views_filt.csv', Body=df_ads_views.to_csv(index=False))#.encode('utf-8'))
+    s3.put_object(Bucket=bucket_name, Key='Data/Processed/product_views_filt.csv', Body=df_product_views.to_csv(index=False))#.encode('utf-8'))
+    s3.put_object(Bucket=bucket_name, Key='Data/Processed/ads_views_filt.csv', Body=df_ads_views.to_csv(index=False))#.encode('utf-8'))
 
   #print('GUARDADO EN S3')
-  return
+    return
 
 
-def TopProduct(s3_object_product_views_filt, **context):
+def TopProduct(s3_object_product_views_filt, **kwargs):
     '''
     Esta función toma las vistas de productos ya filtradas y por cada advertiser
     se queda con el top 20 de productos vistos
@@ -88,7 +79,7 @@ def TopProduct(s3_object_product_views_filt, **context):
     df_top20 = df_count_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   context['logical_date'].date()
+    fecha_hoy =   kwargs['execution_date'].date()
 
     df_top20['fecha_recom'] = fecha_hoy 
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20.csv', Body=df_top20.to_csv(index=False))#.encode('utf-8'))
@@ -96,7 +87,7 @@ def TopProduct(s3_object_product_views_filt, **context):
     return 
 
 
-def TopCTR (s3_object_ads_views_filt, **context):
+def TopCTR (s3_object_ads_views_filt, **kwargs):
     
     obj = s3.get_object(Bucket = bucket_name, Key=s3_object_ads_views_filt) #definimos el archivo a levantar
     df_ads_views_filt = pd.read_csv(obj['Body']) #levantamos el DF
@@ -121,7 +112,7 @@ def TopCTR (s3_object_ads_views_filt, **context):
     df_top20_CTR = df_sorted.groupby('advertiser_id').head(20)
     
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =  context['logical_date'].date()
+    fecha_hoy =  kwargs['execution_date'].date()
     df_top20_CTR['fecha_recom'] = fecha_hoy #pd.to_datetime(pd.Timestamp.today().date()).strftime('%Y-%m-%d')
     
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20_CTR.csv', Body=df_top20_CTR.to_csv(index=False))#.encode('utf-8'))
@@ -142,9 +133,9 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     #Enviando a RDS
     import psycopg2
     dbname = "recomendaciones"
-    user = "postgres" #Configuracion / Disponibilidad / nombre de usuario maestro
+    user = "modelos" #Configuracion / Disponibilidad / nombre de usuario maestro
     password = "Chavoloco23"
-    host = "database.cjblhvnzxmgc.us-west-1.rds.amazonaws.com" #Econectividad y seguridad
+    host = "database.crv8bjyoa2v8.us-east-1.rds.amazonaws.com" #Econectividad y seguridad
     port = "5432"
 
     #Creamos la conexión a RDS
@@ -183,42 +174,34 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
 
 #Definimos nuestro DAG y sus tareas.
 with DAG(
-    dag_id = 'Recomendar2',
-    schedule_interval= '0 0 * * *', #se ejecuta a las 00:00 todos los días, todas las semanas, todos los meses
+    dag_id = 'Recomendar',
+    schedule_interval= '0 1 * * *', #se ejecuta a las 01:00 todos los días, todas las semanas, todos los meses
     start_date=datetime(2022,4,1),
     catchup=False,
-    dagrun_timeout=timedelta(minutes=60)
+    #dagrun_timeout=timedelta(minutes=60)
 ) as dag:
-  
-  FiltrarDatos = PythonOperator(
-    task_id='Filtro',
-    python_callable=FiltrarDatos, #función definida arriba
-    op_kwargs = {"s3_object_advertiser_ids" : s3_object_advertiser_ids,
-                 "s3_object_ads_views": s3_object_ads_views,
-                 "s3_object_product_views":s3_object_product_views},
-    provide_context=True
-    )
-
-  TopCTR = PythonOperator(
-     task_id='TopCTR',
-    python_callable=TopCTR, #función definida arriba
-    op_kwargs = {"s3_object_ads_views_filt" : s3_object_ads_views_filt},
-    provide_context=True
-    )
-
-  TopProduct = PythonOperator(
-    task_id='TopProduct',
-    python_callable=TopProduct, #función definida arriba
-    op_kwargs = {"s3_object_product_views_filt" : s3_object_product_views_filt},
-    provide_context=True
-    )
-
-  DBWriting = PythonOperator(
-    task_id='DBWriting',
-    python_callable=DBWriting, #función definida arriba
-    op_kwargs = {"s3_object_df_top20" : s3_object_df_top20,
-                 "s3_object_df_top20_CTR" : s3_object_df_top20_CTR}
-    )
+    FiltrarDatos = PythonOperator(
+        task_id='Filtro',
+        python_callable=FiltrarDatos, #función definida arriba
+        op_kwargs = {"s3_object_advertiser_ids" : s3_object_advertiser_ids,
+                     "s3_object_ads_views": s3_object_ads_views,
+                     "s3_object_product_views":s3_object_product_views})
+    
+    TopCTR = PythonOperator(
+        task_id='TopCTR',
+        python_callable=TopCTR, #función definida arriba
+        op_kwargs = {"s3_object_ads_views_filt" : s3_object_ads_views_filt})
+    
+    TopProduct = PythonOperator(
+        task_id='TopProduct',
+        python_callable=TopProduct, #función definida arriba
+        op_kwargs = {"s3_object_product_views_filt" : s3_object_product_views_filt})
+    
+    DBWriting = PythonOperator(
+        task_id='DBWriting',
+        python_callable=DBWriting, #función definida arriba
+        op_kwargs = {"s3_object_df_top20" : s3_object_df_top20,
+                     "s3_object_df_top20_CTR" : s3_object_df_top20_CTR})
 
 
 # #Dependencias
