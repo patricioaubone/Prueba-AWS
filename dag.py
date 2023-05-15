@@ -171,12 +171,17 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     return 
 
 #Definimos nuestro DAG y sus tareas.
+default_args = {
+    'start_date': datetime.utcnow().replace(hour=0, minute=0, second=0),
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
+
 with DAG(
     dag_id = 'Recomen',
     schedule_interval= '0 0 * * *', #se ejecuta a las 00:00 todos los días, todas las semanas, todos los meses
-    start_date=datetime(2022,4,1),
+    default_args=default_args,
     catchup=False,
-    dagrun_timeout=timedelta(minutes=60)
     ) as dag:
     FiltrarDatos = PythonOperator(
         task_id='Filtro',
