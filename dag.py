@@ -32,7 +32,7 @@ def FiltrarDatos(s3_object_advertiser_ids, s3_object_ads_views, s3_object_produc
     obj = s3.get_object(Bucket = bucket_name, Key=s3_object_product_views) #definimos el archivo a levantar
     df_product_views = pd.read_csv(obj['Body']) #levantamos el DF
     
-    execution_date = kwargs['execution_date'].date()
+    execution_date = kwargs['data_interval_end'].date()
     fecha_hoy = datetime.combine(execution_date, datetime.min.time())
     yesterday = fecha_hoy - timedelta(days=1)
     fecha_ayer =  yesterday.date()
@@ -77,7 +77,7 @@ def TopProduct(s3_object_product_views_filt, **kwargs):
     df_top20 = df_count_sorted.groupby('advertiser_id').head(20)
 
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =   kwargs['execution_date'].date()
+    fecha_hoy =   kwargs['data_interval_end'].date()
 
     df_top20['fecha_recom'] = fecha_hoy 
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20.csv', Body=df_top20.to_csv(index=False))#.encode('utf-8'))
@@ -110,7 +110,7 @@ def TopCTR (s3_object_ads_views_filt, **kwargs):
     df_top20_CTR = df_sorted.groupby('advertiser_id').head(20)
 
     #Creamos una columna con la fecha de recomendacion
-    fecha_hoy =  kwargs['execution_date'].date()
+    fecha_hoy =  kwargs['data_interval_end'].date()
     df_top20_CTR['fecha_recom'] = fecha_hoy #pd.to_datetime(pd.Timestamp.today().date()).strftime('%Y-%m-%d')
 
     s3.put_object(Bucket=bucket_name, Key='Data/Processed/df_top20_CTR.csv', Body=df_top20_CTR.to_csv(index=False))#.encode('utf-8'))
@@ -171,8 +171,9 @@ def DBWriting(s3_object_df_top20, s3_object_df_top20_CTR):
     return 
 
 #Definimos nuestro DAG y sus tareas.
+
 with DAG(
-    dag_id = 'Recomen',
+    dag_id = 'Recomendar',
     schedule_interval= '0 0 * * *', #se ejecuta a las 00:00 todos los días, todas las semanas, todos los meses
     start_date=datetime(2022,4,1),
     catchup=False,
