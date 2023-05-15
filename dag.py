@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from datetime import datetime, timedelta
 from airflow import DAG
 # from airflow.operators.bash import BashOperator
@@ -422,4 +421,3 @@ with DAG(
 FiltrarDatos >> TopCTR
 FiltrarDatos >> TopProduct
 [TopCTR, TopProduct] >> DBWriting
->>>>>>> 839bcaeae80320cbac479d112774b408ca2f4e7e
